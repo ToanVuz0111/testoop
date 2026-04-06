@@ -3,13 +3,15 @@ package treevisualizer.gui;
 import treevisualizer.model.TreeNode;
 import treevisualizer.operation.OperationResult;
 import treevisualizer.operation.OperationStep;
+import treevisualizer.tree.AbstractTree;
 import treevisualizer.tree.Tree;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
-import java.util.ArrayList;
+import java.util.ArrayDeque;
 import java.util.Collections;
+import java.util.Deque;
 import java.util.List;
 
 public class VisualizationScreen extends JPanel {
@@ -24,8 +26,9 @@ public class VisualizationScreen extends JPanel {
     private OperationResult currentResult;
     private int currentStepIndex = -1;
 
-    private List<TreeNode> undoStack = new ArrayList<>();
-    private List<TreeNode> redoStack = new ArrayList<>();
+    private final Deque<Object[]> undoStack = new ArrayDeque<>();
+    private final Deque<Object[]> redoStack = new ArrayDeque<>();
+    private static final int MAX_UNDO = 30;
 
     private JLabel operationLabel;
 
@@ -124,6 +127,10 @@ public class VisualizationScreen extends JPanel {
     private void handleOperation(String op) {
         controlBarPanel.stopAnimation();
 
+        // Snapshot state before mutating operations
+        boolean mutates = !op.equals("Traverse") && !op.equals("Search");
+        Object[] snapshot = mutates ? ((AbstractTree) tree).snapshot() : null;
+
         OperationResult result = null;
         switch (op) {
             case "Create" -> result = tree.create();
@@ -139,6 +146,12 @@ public class VisualizationScreen extends JPanel {
         if (!result.isSuccess() && result.getSteps().isEmpty()) {
             JOptionPane.showMessageDialog(this, result.getErrorMessage(), "Error", JOptionPane.ERROR_MESSAGE);
             return;
+        }
+
+        if (snapshot != null && result.isSuccess()) {
+            if (undoStack.size() >= MAX_UNDO) undoStack.pollFirst();
+            undoStack.push(snapshot);
+            redoStack.clear();
         }
 
         executeOperation(result);
@@ -275,17 +288,24 @@ public class VisualizationScreen extends JPanel {
 
     public void undo() {
         if (!undoStack.isEmpty()) {
-            redoStack.add(tree.getRoot());
-            tree.create();
+            redoStack.push(((AbstractTree) tree).snapshot());
+            ((AbstractTree) tree).restore(undoStack.pop());
+            currentResult = null;
             vizPanel.setTree(tree.getRoot());
+            vizPanel.clearHighlights();
+            controlBarPanel.updateProgress(0, 0);
             controlBarPanel.setStatus("Undo");
         }
     }
 
     public void redo() {
         if (!redoStack.isEmpty()) {
-            undoStack.add(tree.getRoot());
+            undoStack.push(((AbstractTree) tree).snapshot());
+            ((AbstractTree) tree).restore(redoStack.pop());
+            currentResult = null;
             vizPanel.setTree(tree.getRoot());
+            vizPanel.clearHighlights();
+            controlBarPanel.updateProgress(0, 0);
             controlBarPanel.setStatus("Redo");
         }
     }

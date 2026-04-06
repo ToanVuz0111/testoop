@@ -27,4 +27,14 @@ public class GenericTreeNode extends TreeNode {
     public void removeChild(int value) {
         children.removeIf(c -> c.getValue() == value);
     }
+
+    public GenericTreeNode deepCopy() {
+        GenericTreeNode copy = new GenericTreeNode(value);
+        copy.setX(x);
+        copy.setY(y);
+        for (GenericTreeNode child : children) {
+            copy.addChild(child.deepCopy());
+        }
+        return copy;
+    }
 }

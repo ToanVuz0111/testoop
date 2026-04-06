@@ -21,4 +21,21 @@ public class BinaryTreeNode extends TreeNode {
     public void setRight(BinaryTreeNode right) { this.right = right; }
     public BinaryTreeNode getParent() { return parent; }
     public void setParent(BinaryTreeNode parent) { this.parent = parent; }
+
+    public BinaryTreeNode deepCopy() {
+        BinaryTreeNode copy = new BinaryTreeNode(value);
+        copy.setX(x);
+        copy.setY(y);
+        if (left != null) {
+            BinaryTreeNode leftCopy = left.deepCopy();
+            leftCopy.setParent(copy);
+            copy.setLeft(leftCopy);
+        }
+        if (right != null) {
+            BinaryTreeNode rightCopy = right.deepCopy();
+            rightCopy.setParent(copy);
+            copy.setRight(rightCopy);
+        }
+        return copy;
+    }
 }

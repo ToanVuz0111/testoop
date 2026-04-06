@@ -201,12 +201,20 @@ public class RedBlackTree extends BinaryTree {
 
         result.addStep(new OperationStep("Found node " + value + ", proceeding with deletion", 2, List.of(value), "red", "DELETE_RB"));
 
-        // Use parent class delete logic, then fix
+        NodeColor deletedColor = ((RedBlackTreeNode) node).getColor();
+
+        // Perform BST deletion
         BinaryTreeNode parent = nodeAndParent[1];
         deleteNode(node, parent);
         size--;
 
-        // Ensure root is black
+        // If a BLACK node was removed, fix violations
+        if (deletedColor == NodeColor.BLACK) {
+            result.addStep(new OperationStep("Removed BLACK node - fixing RB violations", 3, Collections.emptyList(), "blue", "DELETE_RB"));
+            fixDeleteViolations(result);
+        }
+
+        // Ensure root is always black
         if (root != null) {
             ((RedBlackTreeNode) root).setColor(NodeColor.BLACK);
         }
@@ -214,5 +222,43 @@ public class RedBlackTree extends BinaryTree {
         result.addStep(new OperationStep("Deletion of " + value + " complete. Tree rebalanced.", 5, Collections.emptyList(), "green", "DELETE_RB"));
         calculateLayout();
         return result;
+    }
+
+    /**
+     * Restores red-black properties after deletion by recoloring nodes.
+     * Handles the common case where a double-black node can be resolved
+     * by recoloring a red sibling or parent.
+     */
+    private void fixDeleteViolations(OperationResult result) {
+        if (root == null) return;
+        fixDoubleBlack((RedBlackTreeNode) root, result);
+        ((RedBlackTreeNode) root).setColor(NodeColor.BLACK);
+    }
+
+    private void fixDoubleBlack(RedBlackTreeNode node, OperationResult result) {
+        if (node == null) return;
+        RedBlackTreeNode left = node.getLeft();
+        RedBlackTreeNode right = node.getRight();
+
+        // Case: node has a red child — recolor to fix double-black
+        if (left != null && left.getColor() == NodeColor.RED
+                && (left.getLeft() == null || left.getLeft().getColor() == NodeColor.BLACK)
+                && (left.getRight() == null || left.getRight().getColor() == NodeColor.BLACK)) {
+            left.setColor(NodeColor.BLACK);
+            result.addStep(new OperationStep("Recolored node " + left.getValue() + " to BLACK", 3,
+                    List.of(left.getValue()), "blue", "DELETE_RB"));
+            return;
+        }
+        if (right != null && right.getColor() == NodeColor.RED
+                && (right.getLeft() == null || right.getLeft().getColor() == NodeColor.BLACK)
+                && (right.getRight() == null || right.getRight().getColor() == NodeColor.BLACK)) {
+            right.setColor(NodeColor.BLACK);
+            result.addStep(new OperationStep("Recolored node " + right.getValue() + " to BLACK", 3,
+                    List.of(right.getValue()), "blue", "DELETE_RB"));
+            return;
+        }
+
+        fixDoubleBlack(left, result);
+        fixDoubleBlack(right, result);
     }
 }
