@@ -89,8 +89,8 @@ public class GenericTree extends AbstractTree {
 
         if (root.getValue() == value) {
             result.addStep(new OperationStep("Deleting root node " + value, 0, List.of(value), "red", "DELETE_GENERIC"));
-            root = null;
             size = 0;
+            root = null;
             result.addStep(new OperationStep("Root deleted. Tree is now empty.", 3, Collections.emptyList(), "green", "DELETE_GENERIC"));
             calculateLayout();
             return result;
@@ -115,12 +115,21 @@ public class GenericTree extends AbstractTree {
             result.addStep(new OperationStep("Checking node " + child.getValue(), 1, List.of(child.getValue()), "yellow", "DELETE_GENERIC"));
             if (child.getValue() == value) {
                 current.removeChild(value);
-                size--;
+                size -= countSubtree(child);
                 return true;
             }
             if (deleteNode(child, value, result)) return true;
         }
         return false;
+    }
+
+    private int countSubtree(GenericTreeNode node) {
+        if (node == null) return 0;
+        int count = 1;
+        for (GenericTreeNode child : node.getChildList()) {
+            count += countSubtree(child);
+        }
+        return count;
     }
 
     @Override

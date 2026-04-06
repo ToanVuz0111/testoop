@@ -282,7 +282,7 @@ public class BinaryTree extends AbstractTree {
         if (root == null) return;
         int[] counter = {0};
         assignInorderPosition((BinaryTreeNode) root, counter, 1);
-        normalizePositions((BinaryTreeNode) root, 600, 60, 1);
+        normalizePositions(600, 60);
     }
 
     private void assignInorderPosition(BinaryTreeNode node, int[] counter, int depth) {
@@ -293,7 +293,7 @@ public class BinaryTree extends AbstractTree {
         assignInorderPosition(node.getRight(), counter, depth + 1);
     }
 
-    private void normalizePositions(BinaryTreeNode node, int centerX, int topY, int depth) {
+    private void normalizePositions(int centerX, int topY) {
         if (root == null) return;
         int minX = findMin((BinaryTreeNode) root);
         int maxX = findMax((BinaryTreeNode) root);
