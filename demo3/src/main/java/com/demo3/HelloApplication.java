@@ -1,5 +1,7 @@
 package com.demo3;
 
+import com.demo3.controller.TreeVisualizerController;
+import javafx.fxml.FXMLLoader;
 import com.demo3.tree.BinarySearchTreeModel;
 import com.demo3.tree.GenericTreeModel;
 import com.demo3.tree.OperationStep;
@@ -17,6 +19,7 @@ import javafx.application.Application;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
+import javafx.scene.Parent;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.Alert;
@@ -86,17 +89,19 @@ public class HelloApplication extends Application {
 
     @Override
     public void start(Stage stage) {
-        VBox mainMenu = buildMainMenu(stage);
-        root.getChildren().addAll(mainMenu, visualizerView);
-        showMainMenu(mainMenu);
-        configureVisualizer(mainMenu);
-        refreshInputHints();
-        renderCurrentStep();
-
-        Scene scene = new Scene(root, 1420, 900);
-        stage.setTitle("Tree Operation Visualizer");
-        stage.setScene(scene);
-        stage.show();
+        try {
+            FXMLLoader loader = new FXMLLoader(HelloApplication.class.getResource("/com/demo3/view/tree-visualizer-view.fxml"));
+            Parent rootNode = loader.load();
+            TreeVisualizerController controller = loader.getController();
+            controller.setStage(stage);
+            Scene scene = new Scene(rootNode, 1420, 900);
+            scene.getStylesheets().add(HelloApplication.class.getResource("/com/demo3/view/app.css").toExternalForm());
+            stage.setTitle("Tree Operation Visualizer");
+            stage.setScene(scene);
+            stage.show();
+        } catch (Exception ex) {
+            throw new RuntimeException("Unable to load JavaFX view", ex);
+        }
     }
 
     private VBox buildMainMenu(Stage stage) {
